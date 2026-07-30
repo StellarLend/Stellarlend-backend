@@ -11,6 +11,8 @@ import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { rootRouter } from "./routes/index.js";
+import { safeRedirectMiddleware } from "./middleware/safeRedirectMiddleware.js";
+
 
 export function createApp(): Express {
   const app = express();
