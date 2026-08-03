@@ -21,6 +21,7 @@ liquidate) and position/market reads.
 - **Express** for the HTTP layer
 - **Prisma** + **PostgreSQL** for persistence
 - **Zod** for env-var and request validation
+- **prom-client** for Prometheus-compatible operational metrics
 - **Vitest** + **Supertest** for testing
 - **ESLint** + **Prettier** for linting/formatting
 - **GitHub Actions** for CI
@@ -36,6 +37,7 @@ src/
   services/          Business logic: Stellar/Soroban, indexer, oracle, etc.
   repositories/       Prisma-backed data access, one module per aggregate
   middleware/        Express middleware (error handling, request logging, ...)
+  observability/     Prometheus metrics and operational instrumentation
   graphql/           GraphQL schema (planned, not wired up yet)
   lib/               Small shared utilities (logger, Prisma client singleton)
   types/             Shared TypeScript types
@@ -81,6 +83,7 @@ The server boots on `http://localhost:4000` by default (see `PORT` in
 ```bash
 curl http://localhost:4000/health
 curl http://localhost:4000/ready   # also checks the DB connection
+curl http://localhost:4000/metrics # use Bearer auth when configured
 ```
 
 ### Scripts
@@ -101,6 +104,11 @@ curl http://localhost:4000/ready   # also checks the DB connection
 See [`.env.example`](./.env.example) for the full list with comments. The
 loader in `src/config/env.ts` validates these with `zod` at boot and the
 process exits immediately if something required is missing or malformed.
+
+The oracle source contract, fallback behavior, and safety checks are documented
+in [`docs/ORACLE.md`](./docs/ORACLE.md). Logging, request correlation, metrics,
+and alerting guidance are documented in
+[`docs/OBSERVABILITY.md`](./docs/OBSERVABILITY.md).
 
 ## Contributing
 

@@ -12,6 +12,11 @@
 import "dotenv/config";
 import { z } from "zod";
 
+const optionalSecret = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().min(16).optional(),
+);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
@@ -36,8 +41,17 @@ const envSchema = z.object({
   AUTH_JWT_SECRET: z.string().default("change-me-in-every-real-environment"),
 
   // Oracle
-  ORACLE_PRIMARY_SOURCE: z.string().default("soroban"),
+  ORACLE_PRIMARY_SOURCE: z.string().min(1).default("primary"),
+  ORACLE_PRIMARY_URL: z.string().url().optional(),
+  ORACLE_FALLBACK_SOURCE: z.string().min(1).optional(),
+  ORACLE_FALLBACK_URL: z.string().url().optional(),
   ORACLE_PRICE_STALENESS_THRESHOLD_SECONDS: z.coerce.number().int().positive().default(120),
+  ORACLE_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(30),
+  ORACLE_MAX_DEVIATION_PERCENT: z.coerce.number().positive().max(100).default(20),
+  ORACLE_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(2_000),
+
+  // Observability
+  METRICS_AUTH_TOKEN: optionalSecret,
 
   // Caching
   REDIS_URL: z.string().optional(),

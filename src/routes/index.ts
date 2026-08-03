@@ -12,11 +12,13 @@ import { authRouter } from "./auth.js";
 import { healthRouter } from "./health.js";
 import { lendingRouter } from "./lending.js";
 import { marketsRouter } from "./markets.js";
+import { metricsRouter } from "./metrics.js";
 import { positionsRouter } from "./positions.js";
 
 export const rootRouter = Router();
 
 rootRouter.use(healthRouter);
+rootRouter.use(metricsRouter);
 
 const apiV1Router = Router();
 apiV1Router.use("/auth", authRouter);

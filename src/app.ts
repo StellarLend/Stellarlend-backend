@@ -9,6 +9,7 @@ import helmet from "helmet";
 
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { requestContext } from "./middleware/requestContext.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { rootRouter } from "./routes/index.js";
 
@@ -22,6 +23,7 @@ export function createApp(): Express {
       origin: env.CORS_ALLOWED_ORIGINS,
     }),
   );
+  app.use(requestContext);
   app.use(express.json());
   app.use(requestLogger);
 
