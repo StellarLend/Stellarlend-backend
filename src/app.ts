@@ -8,6 +8,7 @@ import express, { type Express } from "express";
 import helmet from "helmet";
 
 import { env } from "./config/env.js";
+import { compressionMiddleware } from "./middleware/compression.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 import { rootRouter } from "./routes/index.js";
@@ -17,6 +18,7 @@ export function createApp(): Express {
 
   app.disable("x-powered-by");
   app.use(helmet());
+  app.use(compressionMiddleware());
   app.use(
     cors({
       origin: env.CORS_ALLOWED_ORIGINS,
