@@ -30,6 +30,17 @@ const envSchema = z.object({
   STELLAR_NETWORK_PASSPHRASE: z.string().default("Test SDF Network ; September 2015"),
   LENDING_POOL_CONTRACT_ID: z.string().optional(),
 
+  // Request body limits
+  BODY_SIZE_LIMIT: z
+    .string()
+    .default("100kb")
+    .describe("Maximum allowed request body size (e.g. '100kb', '1mb', '500b')."),
+  CONTENT_TYPE_ENFORCEMENT: z
+    .string()
+    .default("true")
+    .transform((v) => v === "true" || v === "1")
+    .describe("When true, mutating endpoints (POST/PUT/PATCH) reject non-JSON Content-Type with 415."),
+
   // Auth
   AUTH_HOME_DOMAIN: z.string().default("localhost:4000"),
   AUTH_SERVER_SIGNING_SECRET: z.string().optional(),
