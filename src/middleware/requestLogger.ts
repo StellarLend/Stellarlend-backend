@@ -1,12 +1,12 @@
-/**
- * Minimal request-logging middleware: one structured log line per request
- * with method, path, status code, and duration. Request-ID correlation and
- * redaction are left to the future structured-logging/observability issue.
- */
 import type { NextFunction, Request, Response } from "express";
 
+import { getRequestId } from "../lib/requestContext.js";
 import { logger } from "../lib/logger.js";
 
+/**
+ * Minimal request-logging middleware: one structured log line per request
+ * with method, path, status code, duration, and the correlation request ID.
+ */
 export function requestLogger(req: Request, res: Response, next: NextFunction): void {
   const startedAt = process.hrtime.bigint();
 
@@ -17,6 +17,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
       path: req.originalUrl,
       statusCode: res.statusCode,
       durationMs: Math.round(durationMs * 100) / 100,
+      requestId: getRequestId(),
     });
   });
 
