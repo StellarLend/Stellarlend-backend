@@ -1,6 +1,8 @@
 
 import { PrismaClient, Profile } from '@prisma/client';
 
+import { sanitiseRecord } from "../lib/security/inputSanitizer.js";
+
 const prisma = new PrismaClient();
 
 export type UpsertProfileInput = {
@@ -17,14 +19,17 @@ export type UpsertProfileInput = {
 export async function upsertProfile(data: UpsertProfileInput): Promise<Profile> {
   const { userId, ...updateData } = data;
 
+  // Sanitize free-text fields after validation, before persistence (#19).
+  const sanitised = sanitiseRecord(updateData) as Omit<UpsertProfileInput, "userId">;
+
   return prisma.profile.upsert({
     where: { userId },
     create: {
       userId,
-      ...updateData,
+      ...sanitised,
     },
     update: {
-      ...updateData,
+      ...sanitised,
     },
   });
 }
