@@ -42,6 +42,13 @@ const envSchema = z.object({
   // Caching
   REDIS_URL: z.string().optional(),
 
+  // Error tracking
+  SENTRY_DSN: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().url().optional(),
+  ),
+  SENTRY_ENVIRONMENT: z.string().optional(),
+
   // CORS
   CORS_ALLOWED_ORIGINS: z
     .string()

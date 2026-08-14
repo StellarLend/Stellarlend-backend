@@ -7,6 +7,7 @@
 import type { NextFunction, Request, Response } from "express";
 
 import { logger } from "../lib/logger.js";
+import { captureServerError } from "../lib/telemetry/sentry.js";
 
 export class AppError extends Error {
   readonly statusCode: number;
@@ -31,12 +32,7 @@ export function notFoundHandler(req: Request, res: Response): void {
 
 // Express only recognizes an error-handling middleware if it declares all
 // four parameters, so `_req` and `_next` must stay even though unused.
-export function errorHandler(
-  err: unknown,
-  _req: Request,
-  res: Response,
-  _next: NextFunction,
-): void {
+export function errorHandler(err: unknown, req: Request, res: Response, _next: NextFunction): void {
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       error: { code: err.code, message: err.message },
@@ -47,6 +43,11 @@ export function errorHandler(
   logger.error("unhandled error", {
     message: err instanceof Error ? err.message : String(err),
     stack: err instanceof Error ? err.stack : undefined,
+  });
+  captureServerError(err, {
+    method: req.method,
+    requestId: req.get("x-request-id"),
+    route: req.route?.path ?? req.path,
   });
 
   res.status(500).json({
