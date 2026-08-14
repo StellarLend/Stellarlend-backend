@@ -1,14 +1,11 @@
+import { PrismaClient, Profile } from "@prisma/client";
 
-import { PrismaClient, Profile } from '@prisma/client';
+import { type ProfileUpdateInput } from "../validation/accountSchemas.js";
 
 const prisma = new PrismaClient();
 
-export type UpsertProfileInput = {
+export type UpsertProfileInput = ProfileUpdateInput & {
   userId: string;
-  displayName?: string | null;
-  bio?: string | null;
-  website?: string | null;
-  timezone?: string | null;
 };
 
 /**
