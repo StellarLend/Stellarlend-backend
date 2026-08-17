@@ -12,6 +12,7 @@ import { authRouter } from "./auth.js";
 import { healthRouter } from "./health.js";
 import { lendingRouter } from "./lending.js";
 import { marketsRouter } from "./markets.js";
+import { notificationsRouter } from "./notifications.js";
 import { positionsRouter } from "./positions.js";
 
 export const rootRouter = Router();
@@ -22,6 +23,7 @@ const apiV1Router = Router();
 apiV1Router.use("/auth", authRouter);
 apiV1Router.use("/lending", lendingRouter);
 apiV1Router.use("/markets", marketsRouter);
+apiV1Router.use("/notifications", notificationsRouter);
 apiV1Router.use("/positions", positionsRouter);
 
 rootRouter.use("/api/v1", apiV1Router);

@@ -61,3 +61,21 @@ model Profile {
 
   @@map("profiles")
 }
+
+/// A single in-app notification for a user (e.g. liquidation warnings,
+/// digest summaries). Backs the frontend notification bell: list, mark
+/// as read, mark all as read, delete. `userId` is not a foreign key (like
+/// `Profile.userId`) since it identifies the caller ahead of the real
+/// session-auth model landing, not an `Account` row.
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @db.VarChar(64)
+  title     String   @db.VarChar(200)
+  message   String   @db.VarChar(2000)
+  type      String   @db.VarChar(50)
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("notifications")
+}
