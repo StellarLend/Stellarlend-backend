@@ -100,9 +100,7 @@ describe("GET /api/v1/markets", () => {
     expect(etag).toBeDefined();
 
     // Second request with If-None-Match header
-    const secondResponse = await request(app)
-      .get("/api/v1/markets")
-      .set("If-None-Match", etag);
+    const secondResponse = await request(app).get("/api/v1/markets").set("If-None-Match", etag!);
 
     expect(secondResponse.status).toBe(304);
     expect(secondResponse.body).toEqual({});

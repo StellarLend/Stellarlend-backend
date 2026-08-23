@@ -27,7 +27,7 @@ marketsRouter.get("/", async (req: Request, res: Response) => {
     res.setHeader("ETag", etag);
     res.setHeader("Cache-Control", "public, max-age=5"); // Cache for a short time
     res.status(200).json(listings);
-  } catch (error) {
+  } catch {
     // Top-level error boundary
     res.status(500).json({ error: "Internal server error fetching markets listing" });
   }
