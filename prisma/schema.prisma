@@ -61,3 +61,29 @@ model Profile {
 
   @@map("profiles")
 }
+
+enum RetryJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  DEAD_LETTER
+}
+
+/// Durable work item for contract/indexer operations that may be retried.
+model RetryJob {
+  id            String        @id @default(cuid())
+  kind          String        @db.VarChar(100)
+  dedupeKey     String?       @unique @db.VarChar(255)
+  payload       Json
+  status        RetryJobStatus @default(QUEUED)
+  attempts      Int           @default(0)
+  maxAttempts   Int           @default(5)
+  nextAttemptAt DateTime      @default(now())
+  lockedAt      DateTime?
+  lastError     String?       @db.VarChar(1000)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([status, nextAttemptAt])
+  @@map("retry_jobs")
+}
