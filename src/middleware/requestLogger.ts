@@ -1,14 +1,15 @@
 /**
- * Minimal request-logging middleware: one structured log line per request
- * with method, path, status code, and duration. Request-ID correlation and
- * redaction are left to the future structured-logging/observability issue.
+ * Request logging middleware: one structured, redacted log line per request.
  */
 import type { NextFunction, Request, Response } from "express";
 
 import { logger } from "../lib/logger.js";
+import { createCorrelationId, runWithCorrelationId } from "../lib/observability.js";
 
 export function requestLogger(req: Request, res: Response, next: NextFunction): void {
   const startedAt = process.hrtime.bigint();
+  const correlationId = createCorrelationId(req.header("x-correlation-id") ?? req.header("x-request-id"));
+  res.setHeader("x-correlation-id", correlationId);
 
   res.on("finish", () => {
     const durationMs = Number(process.hrtime.bigint() - startedAt) / 1_000_000;
@@ -17,8 +18,9 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
       path: req.originalUrl,
       statusCode: res.statusCode,
       durationMs: Math.round(durationMs * 100) / 100,
+      correlationId,
     });
   });
 
-  next();
+  runWithCorrelationId(correlationId, next);
 }

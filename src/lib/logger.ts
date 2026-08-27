@@ -1,14 +1,12 @@
 /**
  * Minimal structured logger.
  *
- * This is a deliberately small placeholder: it prints single-line JSON so log
- * output is machine-parseable from day one, but it does not yet do
- * correlation/request-ID propagation, redaction, or ship to anywhere. That
- * richer structured-logging + observability layer (correlation IDs, redaction,
- * Prometheus metrics) is tracked as a follow-up backend issue — swap this out
- * (e.g. for pino) when that lands instead of building on top of it.
+ * Emits single-line JSON with request correlation and recursive redaction of
+ * credential-like fields. The small dependency metrics registry lives beside
+ * this logger so health probes and future ledger clients share one contract.
  */
 import { env } from "../config/env.js";
+import { getCorrelationId } from "./observability.js";
 
 type Level = "debug" | "info" | "warn" | "error";
 
@@ -27,8 +25,9 @@ function log(level: Level, message: string, meta?: Record<string, unknown>): voi
   const entry = {
     level,
     time: new Date().toISOString(),
+    ...(getCorrelationId() ? { correlationId: getCorrelationId() } : {}),
     message,
-    ...meta,
+    ...sanitizeMeta(meta),
   };
 
   const line = JSON.stringify(entry);
@@ -37,6 +36,17 @@ function log(level: Level, message: string, meta?: Record<string, unknown>): voi
   } else {
     console.log(line);
   }
+}
+
+const SENSITIVE_KEY = /(authorization|cookie|password|secret|token|api[_-]?key|private[_-]?key|mnemonic|seed)/i;
+function sanitizeMeta(value?: Record<string, unknown>): Record<string, unknown> {
+  if (!value) return {};
+  return Object.fromEntries(Object.entries(value).map(([key, item]) => [
+    key,
+    SENSITIVE_KEY.test(key) ? "[REDACTED]" : item && typeof item === "object" && !Array.isArray(item)
+      ? sanitizeMeta(item as Record<string, unknown>)
+      : item,
+  ]));
 }
 
 export const logger = {
