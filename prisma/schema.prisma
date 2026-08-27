@@ -47,6 +47,31 @@ model Position {
   @@map("positions")
 }
 
+/// Durable state for an operation that may submit a transaction to Stellar.
+/// The operation id is client-supplied and immutable; the payload hash makes
+/// accidental or malicious reuse with different intent fail closed.
+model TransactionOperation {
+  id                 String    @id @default(cuid())
+  operationId        String    @unique @db.VarChar(128)
+  action             String    @db.VarChar(32)
+  account            String    @db.VarChar(56)
+  payloadHash        String    @db.Char(64)
+  signedTransaction  String    @db.Text
+  status             String    @db.VarChar(24)
+  attemptCount       Int       @default(0)
+  submissionLeaseToken String?  @db.VarChar(64)
+  submissionLeaseUntil DateTime?
+  ledgerTransaction  String?   @db.VarChar(128)
+  failureCode        String?   @db.VarChar(64)
+  failureMessage     String?   @db.VarChar(500)
+  lastCheckedAt      DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([status])
+  @@map("transaction_operations")
+}
+
 /// User Profile model storing core public and settings attributes.
 /// Enforces schema-level database constraints (VARCHAR lengths) matching
 /// application Zod validation rules as a defense-in-depth measure.
