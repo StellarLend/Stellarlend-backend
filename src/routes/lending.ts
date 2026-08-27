@@ -51,12 +51,19 @@ let transactionService = new TransactionSubmissionService(
 export function configureTransactionService(service: TransactionSubmissionService): void {
   transactionService = service;
 }
+import { validateProtocolInput } from "../validation/protocolInput.js";
 
 export const lendingRouter = Router();
 
 for (const action of LENDING_ACTIONS) {
   lendingRouter.post(`/${action}`, (req, res, next) => {
-    void submitAction(action, req, res).catch(next);
+    // Keep the durable operation API and the earlier protocol-validation
+    // boundary available on the same action routes.
+    if (isTransactionRequest(req.body)) {
+      void submitAction(action, req, res).catch(next);
+      return;
+    }
+    validateProtocolInput(req, res, () => notImplemented(action)(req, res));
   });
 }
 
@@ -136,5 +143,25 @@ function serializeOperation(operation: Awaited<ReturnType<TransactionSubmissionS
     lastCheckedAt: operation.lastCheckedAt?.toISOString() ?? null,
     createdAt: operation.createdAt.toISOString(),
     updatedAt: operation.updatedAt.toISOString(),
+  };
+}
+
+function isTransactionRequest(body: unknown): body is { operationId: string } {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    "operationId" in body &&
+    typeof body.operationId === "string"
+  );
+}
+
+function notImplemented(action: LendingAction) {
+  return (_req: Request, res: Response) => {
+    res.status(501).json({
+      error: {
+        code: "NOT_IMPLEMENTED",
+        message: `The "${action}" lending action is not implemented yet.`,
+      },
+    });
   };
 }
