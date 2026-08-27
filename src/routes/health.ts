@@ -8,6 +8,7 @@
 import { Router, type Request, type Response } from "express";
 
 import { prisma } from "../lib/prisma.js";
+import { recordDependency, renderObservabilityMetrics } from "../lib/observability.js";
 
 export const healthRouter = Router();
 
@@ -22,13 +23,20 @@ healthRouter.get("/health", (_req: Request, res: Response) => {
 });
 
 healthRouter.get("/ready", async (_req: Request, res: Response) => {
+  const startedAt = Date.now();
   try {
     await prisma.$queryRaw`SELECT 1`;
+    recordDependency("prisma", "success", Date.now() - startedAt);
     res.status(200).json({ status: "ready" });
-  } catch (error) {
+  } catch {
+    recordDependency("prisma", "error", Date.now() - startedAt);
     res.status(503).json({
       status: "not_ready",
-      reason: error instanceof Error ? error.message : "unknown error",
+      reason: "database unavailable",
     });
   }
+});
+
+healthRouter.get("/metrics", (_req: Request, res: Response) => {
+  res.type("text/plain").send(renderObservabilityMetrics());
 });
