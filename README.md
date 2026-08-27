@@ -15,6 +15,41 @@ liquidate) and position/market reads.
 > health check, a Prisma/Postgres data layer, and CI — most routes are
 > intentionally `501 Not Implemented` stubs marking where real logic will go.
 
+## Transaction submission safety
+
+The lending action endpoints accept a client-generated `operationId`, the
+client's Stellar `account`, an action-specific `payload`, and a signed
+`signedTransaction` envelope. The server stores the operation and a SHA-256
+fingerprint before calling the configured ledger adapter:
+
+```json
+{
+  "operationId": "deposit:account-1:001",
+  "account": "G...",
+  "payload": { "asset": "USDC", "amount": "100" },
+  "signedTransaction": "base64-xdr"
+}
+```
+
+Retrying the same operation with the same payload returns the durable status
+without another ledger submission. Reusing an operation id with a different
+payload or signed transaction returns `409 OPERATION_PAYLOAD_CONFLICT`.
+Operations can be inspected at
+`GET /api/v1/lending/operations/:operationId`. The reconciliation worker
+boundary is `POST /api/v1/lending/operations/reconcile`; deployments should
+schedule it against the real `LedgerGateway` implementation.
+
+The repository records `pending`, `submitted`, `confirmed`,
+`retryable_failed`, and `terminal_failed` states. Pending submissions use a
+short database lease so two backend processes cannot both submit the same
+operation. A restart can inspect pending/submitted rows and converge them to
+the ledger's authoritative result.
+
+This repository does not yet contain a network-specific Stellar SDK adapter.
+Until one is composed into the application, the default adapter records a
+retryable `LEDGER_UNAVAILABLE` outcome and never reports a false submission.
+Signing remains client-side; private keys are not accepted by these routes.
+
 ## Tech stack
 
 - **Node.js** (LTS, 20+) + **TypeScript** (`strict` mode, ESM/NodeNext)
