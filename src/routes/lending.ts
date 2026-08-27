@@ -8,6 +8,7 @@
  * against this API surface.
  */
 import { Router, type Request, type Response } from "express";
+import { validateProtocolInput } from "../validation/protocolInput.js";
 
 export const lendingRouter = Router();
 
@@ -25,5 +26,5 @@ function notImplemented(action: (typeof ACTIONS)[number]) {
 }
 
 for (const action of ACTIONS) {
-  lendingRouter.post(`/${action}`, notImplemented(action));
+  lendingRouter.post(`/${action}`, validateProtocolInput, notImplemented(action));
 }
