@@ -22,6 +22,7 @@ model Account {
   stellarAddress String   @unique
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  portfolioVersion Int    @default(1)
 
   positions Position[]
 
@@ -41,6 +42,7 @@ model Position {
   debtAmount       Decimal  @default(0) @db.Decimal(38, 18)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  version          Int      @default(1)
 
   @@unique([accountId, asset])
   @@index([asset])
