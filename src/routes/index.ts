@@ -9,6 +9,7 @@
 import { Router } from "express";
 
 import { authRouter } from "./auth.js";
+import { activityRouter } from "./activity.js";
 import { healthRouter } from "./health.js";
 import { lendingRouter } from "./lending.js";
 import { marketsRouter } from "./markets.js";
@@ -20,6 +21,7 @@ rootRouter.use(healthRouter);
 
 const apiV1Router = Router();
 apiV1Router.use("/auth", authRouter);
+apiV1Router.use("/activity", activityRouter);
 apiV1Router.use("/lending", lendingRouter);
 apiV1Router.use("/markets", marketsRouter);
 apiV1Router.use("/positions", positionsRouter);
